@@ -1,0 +1,58 @@
+ros1:
+  - boxturtle
+  - cturtle
+  - diamondback
+  - electric
+  - fuerte
+  - groovy
+  - hydro
+  - indigo
+  - jade
+  - kinetic
+  - lunar
+  - melodic
+  - noetic
+ros2:
+  - ardent
+  - bouncy
+  - crystal
+  - dashing
+  - eloquent
+  - foxy
+  - galactic
+  - humble
+  - rolling
+ubuntu:
+  - lucid
+  - maverick
+  - natty
+  - oneiric
+  - precise
+  - quantal
+  - raring
+  - saucy
+  - trusty
+  - utopic
+  - vivid
+  - wily
+  - xenial
+  - yakkety
+  - zesty
+  - artful
+  - bionic
+  - cosmic
+  - disco
+  - eoan
+  - focal
+  - impish
+  - jammy
+debian:
+  - stretch
+  - jessie
+  - buster
+  - wheezy
+architectures:
+  - i386
+  - amd64
+  - armhf
+  - arm64
