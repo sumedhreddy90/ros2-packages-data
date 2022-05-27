@@ -34,6 +34,10 @@ for i in range(len(raw_urls)):
 # using dictionary comprehension
 # to convert package_list, hit_list lists to dictionary
 hit_packages_data = {package_list[i]: hit_list[i] for i in range(len(package_list))}
-print(hit_packages_data)
 
-# TODO sort packages upon dowloaded hits
+
+# sort packages upon dowloaded hits
+sorted_hit_packages_data = sorted(hit_packages_data.items(), key=lambda val: val[1],reverse= True)
+print(sorted_hit_packages_data)
+
+#selecting top 10 packages from pool of exisiting packages
