@@ -21,13 +21,13 @@ db = MetricDB('packages')
 
 package_list = []
 hit_list = []
-packages_query = db.query('SELECT url, hits FROM urls WHERE url LIKE "%galactic%"')
+packages_query = db.query('SELECT url, hits FROM urls WHERE url LIKE "%foxy%"')
 packages_data = pd.DataFrame(packages_query)
 packages_data = packages_data.reset_index()
 packages_data['url'] = packages_data['url'].map(lambda url: re.sub(r'^.*?/ros', '/ros', url))
-hit_list = packages_data.loc[:20, "hits"].tolist()
-raw_urls = (packages_data.loc[:20,"url"]).tolist()
-
+hit_list = packages_data.loc[:, "hits"].tolist()
+raw_urls = (packages_data.loc[:,"url"]).tolist()
+print(len(raw_urls))
 for i in range(len(raw_urls)):
     package = (''.join(raw_urls[i][:[pos for pos, char in enumerate(raw_urls[i]) if char == '/'][1]+1]))
     package = package.replace("/","")
@@ -51,3 +51,25 @@ topten_packages = sorted(hit_packages_data.items(), key=itemgetter(1), reverse =
 for x in sorted_hit_packages_data:  
   print("{0}: {1}".format(*x))
 
+packages_overall_data =  { 'Humble' : 635,
+ 'Galactic' : 41923,
+ 'Foxy' : 89551,
+ 'Eloquent Elusor' : 44206,
+ 'Dashing Diademata' : 69067,
+ 'Crystal Clemmys' : 25793,
+ 'Bouncy Bolson' : 11190,
+ 'Ardent Apalone' : 8150 }
+
+# Data to plot
+labels = []
+sizes = []
+
+for x, y in packages_overall_data.items():
+    labels.append(x)
+    sizes.append(y)
+
+# Plot
+plt.pie(sizes, labels=labels)
+
+plt.axis('equal')
+plt.show()
