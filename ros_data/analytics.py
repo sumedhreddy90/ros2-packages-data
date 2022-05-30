@@ -46,11 +46,16 @@ sorted_hit_packages_data = sorted(hit_packages_data.items(), key=lambda val: val
 # TODO selecting top 10 packages from pool of exisiting packages
 data = heapq.nlargest(10,hit_packages_data.values())
 topten_packages = sorted(hit_packages_data.items(), key=itemgetter(1), reverse = True)[0:10]
-#print(topten_packages)
 
-for x in sorted_hit_packages_data:  
-  print("{0}: {1}".format(*x))
+# for x in sorted_hit_packages_data:  
+#   print("{0}: {1}".format(*x))
 
+# converting top ten packages into a dataframe
+top_ten_dataframe = pd.DataFrame.from_dict(sorted_hit_packages_data)
+top_ten_dataframe.columns = ['packages', 'downloads']
+print(top_ten_dataframe)
+
+############# Plot for Overall Distro ratio ####################
 packages_overall_data =  { 'Humble' : 635,
  'Galactic' : 41923,
  'Foxy' : 89551,
@@ -73,3 +78,24 @@ plt.pie(sizes, labels=labels)
 
 plt.axis('equal')
 plt.show()
+
+
+#############Plot for Top 10 Packages#################
+
+# Draw plot
+import matplotlib.patches as patches
+
+fig, ax = plt.subplots(figsize=(16,10), facecolor='white', dpi= 80)
+ax.vlines(x=top_ten_dataframe.index, ymin=0, ymax=top_ten_dataframe.downloads, color='firebrick', alpha=0.7, linewidth=20)
+
+# Annotate Text
+for i, downloads in enumerate(top_ten_dataframe.downloads):
+    ax.text(i, downloads+0.5, round(downloads, 1), horizontalalignment='center')
+
+
+# Title, Label, Ticks and Ylim
+ax.set_title('Bar Chart for Packages Downloaded', fontdict={'size':22})
+ax.set(ylabel='Number of Downloads', ylim=(0, 2000))
+plt.xticks(top_ten_dataframe.index, top_ten_dataframe.packages.str.upper(), rotation=30, horizontalalignment='right', fontsize=8)
+plt.show()
+
