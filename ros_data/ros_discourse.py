@@ -23,6 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from itertools import count
 import json
+from turtle import delay
 from urllib import response
 import pandas as pd
 import discourse
@@ -34,10 +35,12 @@ import aiohttp
 from collections import Counter
 from nltk.corpus import stopwords
 import nltk 
+import re
+import time
 nltk.download('stopwords')
 from nltk.tokenize import word_tokenize
 from types import SimpleNamespace
-
+from tqdm import tqdm
 
 url = 'https://discourse.ros.org/'
 topic_title = []
@@ -63,11 +66,19 @@ def get_tasks(session, Ids, flag):
     tasks = []
     for id in Ids:
         if(flag == 'id'):
-            tasks.append(session.get(url + 't/{}.json?'.format(id) + config.api_key_string))
+            resp = session.get(url + 't/{}.json?'.format(id) + config.api_key_string)
+            tasks.append(resp)
+            time.sleep(5)
+            print("GET Request:" + str(id),resp)
+            
             
         else:
-            tasks.append(session.get(url + '/posts/' + '{}.json?'.format(id) + config.api_key_string))
+            resp = session.get(url + '/posts/' + '{}.json?'.format(id) + config.api_key_string)
+            tasks.append(resp)
+            time.sleep(10)
+            print("GET Request:" + str(id),resp)
             
+        
     return tasks
 
          
@@ -94,13 +105,25 @@ async def getPostCooked(Ids):
         async with aiohttp.ClientSession() as session:
             tasks = get_tasks(session, Ids, 'cooked')
             responses = await asyncio.gather(*tasks)
+            f = open("demofile3.txt", "w")
             for resp in responses:
-                resp = await resp.text()
-                data = json.loads(resp, object_hook=lambda d: SimpleNamespace(**d))
-                cooked = data.cooked
-                cooked_posts_data.append(cooked)
-                
-            return cooked_posts_data
+                print("Response Status", resp.status)
+                if(resp.status != 429 & resp.status == 200):
+                    resp = await resp.text()
+                    data = json.loads(resp, object_hook=lambda d: SimpleNamespace(**d))
+                    if (data.cooked is not None):
+                        cooked = data.cooked
+                        # regex to extract required strings
+                        reg_str = "<" + "p" + ">(.*?)</" + "p" + ">"
+                        res = re.findall(reg_str, cooked)
+                        f.write(''.join(str(res)))
+                    else:
+                        print('Post does not have cooked data')
+                else:
+                    print("Going with next GET request")
+                    continue
+            await f.close()
+            
    
     except Exception as e :
         print("error:",e)
@@ -120,9 +143,6 @@ def main():
     topics_data = []
     topics_ids = []
     client =  discourseAPIData()
-    latest = client.get_latest_topics('default')
-    
-
     
     base_url = "https://discourse.ros.org/tag/"
 
@@ -131,12 +151,8 @@ def main():
         response = requests.get(url_template)
         response_json = response.json()
         topic_titles = [topic['title'] for topic in response_json['topic_list']['topics']]
-        topic_tags = [topic['tags'] for topic in response_json['topic_list']['topics']]
         topic_id = [topic['id'] for topic in response_json['topic_list']['topics']]
-        topic_views = [topic['views'] for topic in response_json['topic_list']['topics']]
-        topic_likes = [topic['like_count'] for topic in response_json['topic_list']['topics']]
-        topic_has_answer = [topic['has_accepted_answer'] for topic in response_json['topic_list']['topics']]
-
+        
         if (len(topic_titles) and len(topic_id) != 0):
             topics_data.extend(topic_titles)
             topics_ids.extend(topic_id)
@@ -153,12 +169,12 @@ def main():
     package_topics_data = package_df['Topics'].tolist()
     package_topics_Ids = package_df['Topic Ids'].tolist()
 
-    # Tokenize all topics with tag: ros2
-    for topic in topics_data:
-      topics_token.extend(tokenizer(topic))
-    # Tokenize topics with tag and search words
-    for topic_package in package_topics_data:
-      package_topics_tokens.extend(tokenizer(topic_package))
+    # # Tokenize all topics with tag: ros2
+    # for topic in topics_data:
+    #   topics_token.extend(tokenizer(topic))
+    # # Tokenize topics with tag and search words
+    # for topic_package in package_topics_data:
+    #   package_topics_tokens.extend(tokenizer(topic_package))
     
     # for tid in package_topics_Ids:
     #     post_data = client.get_topic(tid)
