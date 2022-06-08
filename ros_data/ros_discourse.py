@@ -22,6 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """ 
 
 from itertools import count
+import json
 from urllib import response
 import pandas as pd
 import discourse
@@ -35,6 +36,8 @@ from nltk.corpus import stopwords
 import nltk 
 nltk.download('stopwords')
 from nltk.tokenize import word_tokenize
+from types import SimpleNamespace
+
 
 url = 'https://discourse.ros.org/'
 topic_title = []
@@ -42,6 +45,7 @@ package_topics_tokens = []
 topics_token = []
 post_ids = []
 package_topics_Ids = []
+cooked_posts_data = []
 searchwords = ['packages', 'package']
 tag = "ros2"
 
@@ -55,28 +59,51 @@ def discourseAPIData():
     )
     return client
 
-def get_tasks(session, Ids):
+def get_tasks(session, Ids, flag):
     tasks = []
     for id in Ids:
-        tasks.append(session.get(url + 't/{}.json?'.format(id) + config.api_key_string))
+        if(flag == 'id'):
+            tasks.append(session.get(url + 't/{}.json?'.format(id) + config.api_key_string))
+            
+        else:
+            tasks.append(session.get(url + '/posts/' + '{}.json?'.format(id) + config.api_key_string))
+            
     return tasks
+
          
 async def getPostIDs(Ids):
     try:
         async with aiohttp.ClientSession() as session:
-            tasks = get_tasks(session, Ids)
+            tasks = get_tasks(session, Ids, 'id')
             responses = await asyncio.gather(*tasks)
             for resp in responses:
-                resp.json()
-                posts = resp['posts']
-                for id in posts:
-                    post_ids.append(id['id'])
-
-        return post_ids
+                resp = await resp.text()
+                data = json.loads(resp, object_hook=lambda d: SimpleNamespace(**d))
+                posts = data.post_stream.posts
+                for post_id in posts:
+                    post_ids.append(post_id.id)
+                
+            print(post_ids)
+            return post_ids
    
     except Exception as e :
         print("error:",e)
 
+async def getPostCooked(Ids):
+    try:
+        async with aiohttp.ClientSession() as session:
+            tasks = get_tasks(session, Ids, 'cooked')
+            responses = await asyncio.gather(*tasks)
+            for resp in responses:
+                resp = await resp.text()
+                data = json.loads(resp, object_hook=lambda d: SimpleNamespace(**d))
+                cooked = data.cooked
+                cooked_posts_data.append(cooked)
+                
+            return cooked_posts_data
+   
+    except Exception as e :
+        print("error:",e)
 def tokenizer(sorted_topics):
     text_tokens = word_tokenize(sorted_topics)
     tokens_without_sw = [word for word in text_tokens if not word in stopwords.words()]
@@ -140,6 +167,7 @@ def main():
     # plotter(topics_token)
   
     asyncio.run(getPostIDs(package_topics_Ids))
+    asyncio.run(getPostCooked(post_ids))
     
 if __name__ == "__main__":
    (main())
