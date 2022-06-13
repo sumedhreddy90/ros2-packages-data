@@ -41,7 +41,12 @@ async def fetch(session, url):
 
 def tokenizer(sorted_topics):
     text_tokens = word_tokenize(sorted_topics)
+    # removing stop words from NLTK
     tokens_without_sw = [word for word in text_tokens if not word in stopwords.words()]
+    # Removing top 1000 common word
+    text_file = open("ros_data/common_words.txt", "r")
+    common_words = text_file.read().split(',')
+    tokens_without_sw = [word for word in tokens_without_sw if not word in common_words]
     tokens = [re.sub('[^a-zA-Z0-9]+', '', _) for _ in tokens_without_sw]
    
     return tokens
