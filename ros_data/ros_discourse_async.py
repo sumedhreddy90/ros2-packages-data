@@ -14,6 +14,8 @@ import nltk
 nltk.download('stopwords')
 from nltk.tokenize import word_tokenize
 from collections import Counter
+import matplotlib.pyplot as plt
+
 
 tag = "ros2"
 searchwords = ['packages', 'package']
@@ -52,15 +54,17 @@ def plotter(tokens_without_sw):
     word_dist = nltk.FreqDist(words)
     rslt = pd.DataFrame(word_dist.most_common(top_N),
                         columns=['Topic_Words', 'Frequency'])
-    unwanted = ['ros', '2', 'meeting', 'group', 'new', 'engineer','c', 'nan','ros1','2019','hiring', 'may','online','remote','software', '2021', 'using', 'wg', 'working', 'package', 'robot', 'support', '2020', 'call', 'open', 'new', 'announcing', 'how', '2022', 'looking', 'development']
+    unwanted = ['ros', '', 'i', '2', 'meeting', 'group', 'new', 'engineer','c', 'nan','ros1','2019','hiring', 'may','online','remote','software', '2021', 'using', 'wg', 'working', 'package', 'robot', 'support', '2020', 'call', 'open', 'new', 'announcing', 'how', '2022', 'looking', 
+    'development', 'would', 'the', 'list', 'like', 'make', 'use', 'thanks', 'think', 'if']
     for w in unwanted:
         rslt = rslt[rslt.Topic_Words != str(w)]
 
     rslt.plot(x="Topic_Words", y=["Frequency"], kind="bar", title="ROS Discourse ROS2 tagged topics data", figsize=(9, 8))    
+    plt.show( )
     print(rslt)
 
 def cleanhtml(raw_html):
-  cleantext = re.sub(CLEANR, '', raw_html)
+  cleantext = re.sub(CLEANR, '', str(raw_html))
   return cleantext
 
 async def fetch_all(session, urls):
