@@ -19,6 +19,10 @@ tag = "ros2"
 searchwords = ['packages', 'package']
 package_topics_tokens = []
 topics_token = []
+cooked_data = []
+cooked_tokens = []
+CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+
 client = discourse.Client(
         host= config.api_url,
         api_username= config.api_user,
@@ -54,6 +58,10 @@ def plotter(tokens_without_sw):
 
     rslt.plot(x="Topic_Words", y=["Frequency"], kind="bar", title="ROS Discourse ROS2 tagged topics data", figsize=(9, 8))    
     print(rslt)
+
+def cleanhtml(raw_html):
+  cleantext = re.sub(CLEANR, '', raw_html)
+  return cleantext
 
 async def fetch_all(session, urls):
     tasks = []
@@ -99,10 +107,12 @@ async def getData(flag, Idx):
                     # regex to extract required strings
                     reg_str = "<" + "p" + ">(.*?)</" + "p" + ">"
                     res = re.findall(reg_str, cooked)
-                    f.write(''.join(str(res)))
+                    cleaned_text = cleanhtml(res)
+                    f.write(''.join(str(cleaned_text)))
+                    cooked_data.append(cleaned_text)
                 else:
                     print('Post does not have cooked data')
-            return res
+            return cooked_data
 
 async def main():
     topics_data = []
@@ -148,7 +158,11 @@ async def main():
     
     #Get Cooked Post data from each Post Id
     cooked_data = await getData('get_cooked',post_ids)
-
+    for cook in cooked_data:
+        cooked_tokens.extend(tokenizer(cook))
+    
+    #Histogram Post words wrt each topic
+    plotter(cooked_tokens)   
     f.close()
         
 
